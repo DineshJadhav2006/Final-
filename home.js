@@ -128,16 +128,14 @@ function getCurrentLocation() {
 
 // Fetch risk levels for major cities for the summary
 async function fetchDistrictSummaries() {
-    const apiKey = (typeof API_KEY !== "undefined" ? API_KEY : "5a4c5e3313bc10b8a4e086f4c09b522f");
-    if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
-        console.error("API Key for OpenWeatherMap is not set in config.js");
-        return;
-    }
+    const apiKey = window.API_KEY || (typeof API_KEY !== "undefined" ? API_KEY : "5a4c5e3313bc10b8a4e086f4c09b522f");
+    console.log('Using API key for summary:', apiKey ? 'Available' : 'Missing');
     const lists = { danger: [], warning: [], normal: [] };
 
     const promises = Object.entries(DISTRICT_COORDINATES).map(async ([name, coords]) => {
         try {
-            const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${coords.lat}&lon=${coords.lon}&appid=${apiKey}&units=metric`);
+            const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${coords.lat}&lon=${coords.lon}&appid=${apiKey}&units=metric`;
+            const response = await fetch(url);
             if (!response.ok) return null;
             const data = await response.json();
 

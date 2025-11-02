@@ -127,14 +127,8 @@ const cityHelplines = {
 async function initializePage() {
   try {
     loadingOverlay.style.display = "flex";
-    // Use environment variable or fallback to config.js
-    const apiKey = process?.env?.WEATHER_API_KEY || (typeof API_KEY !== "undefined" ? API_KEY : "5a4c5e3313bc10b8a4e086f4c09b522f");
-    
-    if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
-      alert("Please set your OpenWeatherMap API key in the config.js file.");
-      loadingOverlay.style.display = "none";
-      return;
-    }
+    // Use fallback API key directly
+    const apiKey = (typeof API_KEY !== "undefined" && API_KEY !== "YOUR_API_KEY_HERE") ? API_KEY : "5a4c5e3313bc10b8a4e086f4c09b522f";
     
     // Set global API_KEY for other functions
     window.API_KEY = apiKey;
@@ -156,7 +150,8 @@ async function initializePage() {
         getUvData(lat, lon),
       ]);
     if (!forecastData || !currentData) {
-      detailsTitle.textContent = "Error: Could not load weather data.";
+      console.error('Weather data fetch failed:', { forecastData: !!forecastData, currentData: !!currentData });
+      detailsTitle.textContent = "Error: Could not load weather data. Check API key.";
       loadingOverlay.style.display = "none";
       return;
     }
@@ -175,18 +170,23 @@ async function initializePage() {
     loadingOverlay.style.display = "none";
   } catch (e) {
     console.error("initializePage failed", e);
-    detailsTitle.textContent = "Error: Could not initialize page.";
+    detailsTitle.textContent = `Error: ${e.message || 'Could not initialize page'}`;
     loadingOverlay.style.display = "none";
+    // Show more detailed error info
+    if (temperatureEl) temperatureEl.textContent = "Error loading data";
   }
 }
 
 async function getForecastData(lat, lon) {
   try {
     const apiKey = window.API_KEY || "5a4c5e3313bc10b8a4e086f4c09b522f";
-    const r = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
-    );
-    if (!r.ok) throw new Error();
+    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+    console.log('Fetching forecast from:', url);
+    const r = await fetch(url);
+    if (!r.ok) {
+      console.error('Forecast API error:', r.status, r.statusText);
+      throw new Error(`API Error: ${r.status}`);
+    }
     return await r.json();
   } catch (e) {
     console.error("Forecast fetch failed", e);
@@ -196,10 +196,13 @@ async function getForecastData(lat, lon) {
 async function getCurrentWeatherData(lat, lon) {
   try {
     const apiKey = window.API_KEY || "5a4c5e3313bc10b8a4e086f4c09b522f";
-    const r = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
-    );
-    if (!r.ok) throw new Error();
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+    console.log('Fetching current weather from:', url);
+    const r = await fetch(url);
+    if (!r.ok) {
+      console.error('Weather API error:', r.status, r.statusText);
+      throw new Error(`API Error: ${r.status}`);
+    }
     return await r.json();
   } catch (e) {
     console.error("Current weather fetch failed", e);
