@@ -127,16 +127,17 @@ const cityHelplines = {
 async function initializePage() {
   try {
     loadingOverlay.style.display = "flex";
-    // Guard against API_KEY not being defined (avoids ReferenceError)
-    if (
-      typeof API_KEY === "undefined" ||
-      !API_KEY ||
-      API_KEY === "YOUR_API_KEY_HERE"
-    ) {
+    // Use environment variable or fallback to config.js
+    const apiKey = process?.env?.WEATHER_API_KEY || (typeof API_KEY !== "undefined" ? API_KEY : "5a4c5e3313bc10b8a4e086f4c09b522f");
+    
+    if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
       alert("Please set your OpenWeatherMap API key in the config.js file.");
       loadingOverlay.style.display = "none";
       return;
     }
+    
+    // Set global API_KEY for other functions
+    window.API_KEY = apiKey;
 
     const params = new URLSearchParams(window.location.search);
     const lat = params.get("lat"),
@@ -181,8 +182,9 @@ async function initializePage() {
 
 async function getForecastData(lat, lon) {
   try {
+    const apiKey = window.API_KEY || "5a4c5e3313bc10b8a4e086f4c09b522f";
     const r = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+      `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
     );
     if (!r.ok) throw new Error();
     return await r.json();
@@ -193,8 +195,9 @@ async function getForecastData(lat, lon) {
 }
 async function getCurrentWeatherData(lat, lon) {
   try {
+    const apiKey = window.API_KEY || "5a4c5e3313bc10b8a4e086f4c09b522f";
     const r = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
     );
     if (!r.ok) throw new Error();
     return await r.json();
@@ -205,8 +208,9 @@ async function getCurrentWeatherData(lat, lon) {
 }
 async function getAirQualityData(lat, lon) {
   try {
+    const apiKey = window.API_KEY || "5a4c5e3313bc10b8a4e086f4c09b522f";
     const r = await fetch(
-      `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`
+      `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`
     );
     if (!r.ok) throw new Error();
     return await r.json();
@@ -217,7 +221,8 @@ async function getAirQualityData(lat, lon) {
 }
 async function getUvData(lat, lon) {
   try {
-    const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,daily,alerts&appid=${API_KEY}&units=metric`;
+    const apiKey = window.API_KEY || "5a4c5e3313bc10b8a4e086f4c09b522f";
+    const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,daily,alerts&appid=${apiKey}&units=metric`;
     const r = await fetch(url);
     if (!r.ok) {
       if (r.status === 401) {
